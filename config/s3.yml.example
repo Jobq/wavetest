@@ -1,0 +1,12 @@
+development:
+  bucket: bucket_development
+  access_key_id: AAA
+  secret_access_key: BBB
+staging:
+  bucket: bucket_staging
+  access_key_id: CCC
+  secret_access_key: DDD
+production:
+  bucket: bucket_production
+  access_key_id: EEE
+  secret_access_key: FFF

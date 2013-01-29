@@ -17,6 +17,7 @@ spec/fixtures/dag/*.xml
 .#*
 dump.rdb
 config/database.yml
+config/s3.yml
 vendor/cache/*
 *_packaged.js
 *_packaged.css

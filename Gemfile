@@ -6,8 +6,11 @@ gem 'rails', '3.0.20'
 # gem 'rails', :git => 'git://github.com/rails/rails.git'
 
 gem 'pg'
+gem 'aws-s3', '0.6.3', :require => 'aws/s3'
 
 gem 'thin'
+
+gem 'streamio-ffmpeg', '0.9.0'
 # Use unicorn as the web server
 # gem 'unicorn'
 
