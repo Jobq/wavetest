@@ -1,0 +1,90 @@
+-----------------
+
+Cedar stack's default $PATH:
+/app/bin:/app/vendor/bundle/ruby/1.9.1/bin:/usr/local/bin:/usr/bin:/bin
+
+Modified $PATH:
+heroku config:set PATH=/app/bin:/app/vendor/bundle/ruby/1.9.1/bin:/usr/local/bin:/usr/bin:/bin:vendor/wget:vendor/ffmpeg/bin
+
+$LD_LIBRARY_PATH
+heroku config:set LD_LIBRARY_PATH=vendor/ffmpeg/lib:/usr/local/lib:vendor/mp3lame/lib:vendor/x264/lib
+
+-----------------
+
+Vulcan Intro
+http://www.higherorderheroku.com/articles/using-vulcan-to-build-binary-dependencies-on-heroku/
+
+Vulcan Repo:
+
+vendor-ffmpeg-heroku:
+https://gist.github.com/3963576
+
+vendor-ffmpeg-x264-mp3lame-heroku:
+https://gist.github.com/4392472
+
+
+------------------
+
+Useful commands and instructions:
+
+Download a file
+`wget http://www.kozco.com/tech/piano2.wav`
+TODO: search how to give a specific destination filename to the wget output.
+
+Transcoding piano2.wav into encoded.mp3 (128kbps @ 44100 Hz):
+FFMPEG::Movie.new("piano2.wav").transcode("encoded.mp3", { audio_bitrate: 128, audio_sample_rate: 44100 })
+
+Store encoded.mp3 in the myapp_staging bucket as test/encoded.mp3
+AWS::S3::S3Object.store("test/encoded.mp3", open("encoded.mp3"), "myapp_staging")
+
+Retrieve the URL of a file in S3 (myapp_staging bucket).
+AWS::S3::S3Object.url_for("test/encoded.mp3", "myapp_staging", :expires_in => 60*60*3)
+Note: You can set to expire_in, or expire at a specific time
+
+------------------
+
+Cropping a song to middle 30 seconds:
+
+CLIP_DURATION = 30
+song = FFMPEG::Movie.new("carrossel_rough_mix-5-minutes.mp3")
+seek = song.duration / 2 - (CLIP_DURATION / 2)
+seek = 0 if seek + 30 > song.duration
+song.transcode("encoded-clip-carrossel.mp3", { audio_bitrate: 128, audio_sample_rate: 44100, custom: "-ss #{seek} -t #{CLIP_DURATION}"})
+
+
+------------------
+
+Benchmarking WAV to MP3 transcoding:
+- Original: 49 seconds, 9.1 MB, 44100 sample rate, 128 kbps bitrate
+- 6.5 seconds S3 to Heroku downloading
+- 1.56 seconds transcoding
+- 0.75 MB MP3 as result
+- 0.159 seconds Heroku to S3 uploading
+- TOTAL: 10 seconds processing
+
+------------------
+
+Benchmarking MP3 to MP3 transcoding:
+- Original: 300 seconds (5 minutes), 6.9 MB, 44100 sample rate, 192 kbps bitrate
+- 7.7 seconds S3 to Heroku downloading
+- 10.5 seconds transcoding
+- 4.57 MB MP3 as result
+- 0.49 seconds Heroku to S3 uploading
+- TOTAL: 20 seconds
+
+------------------
+
+An interesting command you might want to see for building ffmpeg
+vulcan build -v -s . -p /tmp -d http://vulcan-vladimeeer.herokuapp.com/output/2abeb639-b197-4612-8307-7a0dd76da617 http://vulcan-vladimeeer.herokuapp.com/output/ec6654aa-19b8-48b5-8c8a-0c0d8a3d2085 http://vulcan-vladimeeer.herokuapp.com/output/b00f4148-6200-4bbe-96e3-24532ec4c554 http://vulcan-vladimeeer.herokuapp.com/output/2157fb7b-f6a6-4c1e-b765-7665e7c4a7e7 http://vulcan-vladimeeer.herokuapp.com/output/1c6165a4-1ba8-400b-b747-11f4f63c0a0c http://vulcan-vladimeeer.herokuapp.com/output/bdf6a219-e2a9-4426-982a-09d980eab284 http://vulcan-vladimeeer.herokuapp.com/output/79b43067-b560-466f-96a5-51c4df8afb2b -c "./configure --enable-shared --enable-gpl --enable-version3 --enable-nonfree --enable-hardcoded-tables --enable-libfreetype --enable-libx264 --enable-libfaac --enable-libmp3lame --enable-libvpx --enable-libvorbis --prefix=/tmp && make && make install"
+
+
+-------------------
+
+Alternative ffmpeg build instruction:
+https://github.com/heroku/vulcan/issues/47
+
+--------------------
+
+
+Results from ffmpeg compilation can be found at:
+artifacts/ffmpeg_compilation_results.txt
